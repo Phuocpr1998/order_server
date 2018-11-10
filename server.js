@@ -5,18 +5,17 @@ var io = require("socket.io").listen(server);
 var fs = require("fs");
 server.listen(process.env.PORT || 3000);
 
-console.log("Co nguoi connect ne");
-
 var users = [];
 
 io.sockets.on('connection', function (socket) {
-  
 	//io.sockets.emit('serverguitinnhan', { noidung: "okbaby" });
   
   socket.on('register', function (email) {//email of user ---------- send from user when connect
 	if(email){
 			socket.email = email;
 			users.push(socket);
+			console.log("Email: " + socket.email);
+			console.log("ID: " + socket.id);
 	}
   });
   
@@ -52,6 +51,7 @@ io.sockets.on('connection', function (socket) {
   //}
   
   socket.on('send_result', function(response){ //
+		console.log(response);
 	  var resp = JSON.parse(response);
 	  var index = users.findIndex(soc => soc.email === resp.email_guest);
 	  if(index != -1){
@@ -61,5 +61,16 @@ io.sockets.on('connection', function (socket) {
 		  socket.emit('result', {status:404, message:'Turn back fail!'});
 	  }
   });
+  
+  
+  socket.on('disconnect', function(){
+		var index = users.findIndex(soc => soc.id === socket.id);
+		console.log("index: " + index);
+		if (index != -1) 
+			users.splice(index, 1);
+        socket.disconnect(true);
+        console.info('disconnected user (id=' + socket.id + ').');
+    });
+  
   
 });
