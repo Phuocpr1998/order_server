@@ -9,6 +9,7 @@ import android.widget.Toast;
 import com.github.nkzawa.emitter.Emitter;
 import com.github.nkzawa.socketio.client.IO;
 import com.github.nkzawa.socketio.client.Socket;
+import com.google.gson.Gson;
 
 import org.json.JSONObject;
 
@@ -16,11 +17,11 @@ import java.net.URISyntaxException;
 
 public class MainActivity extends AppCompatActivity {
     private Socket msocket;
-    private Button accept, order, rgGuest, rgOwner;
+    private Button  order;
 
     {
         try {
-            msocket = IO.socket("http://192.168.1.100:3000");
+            msocket = IO.socket("http://foodmap-notifyserver.herokuapp.com/");
         } catch (URISyntaxException e) {}
     }
 
@@ -29,42 +30,21 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         msocket.connect();
-        accept = (Button) findViewById(R.id.accept);
         order = (Button) findViewById(R.id.order);
-        rgGuest = (Button) findViewById(R.id.rgGuest);
-        rgOwner = (Button) findViewById(R.id.rgOwner);
-
-        msocket.on("receive_order", onReceice);
+        msocket.emit("register", "chauhoangphuc@gmail.com");
         msocket.on("receive_result", onReceice);
 
-        rgGuest.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                msocket.emit("register", "chauhoangphuc@gmail.com");
-            }
-        });
-
-        rgOwner.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                msocket.emit("register", "nguyenvanphuoc@gmail.com");
-            }
-        });
 
         order.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Order order = new Order("nguyenvanphuoc@gmail.com", "chauhoangphuc@gmail.com");
-                msocket.emit("send_order", order.toString());
-            }
-        });
-
-
-        accept.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Order order = new Order("nguyenvanphuoc@gmail.com", "chauhoangphuc@gmail.com");
-                msocket.emit("send_result", order.toString());
+                Offer offer = new Offer("anonymous", 10, "chauhoangphuc@gmail.com", 2);
+                Order order = new Order("the.dreamers.k16@gmail.com", "chauhoangphuc@gmail.com", "Quán ăn chay", 4, 1, offer);
+                Gson gson = new Gson();
+                String req =  gson.toJson(order);
+                System.out.printf(req);
+                Toast.makeText(MainActivity.this, req, Toast.LENGTH_LONG).show();
+                msocket.emit("send_order", req);
             }
         });
 
@@ -76,12 +56,16 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    String data = (String) args[0];
+                    String data = args[0].toString();
                     Toast.makeText(MainActivity.this, data, Toast.LENGTH_LONG).show();
                 }
             });
         }
     };
 
-
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        msocket.disconnect();
+    }
 }
