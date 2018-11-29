@@ -1,5 +1,8 @@
 package com.study.android.testorderserver;
 
+import com.google.gson.annotations.JsonAdapter;
+
+@JsonAdapter(Serializer.class)
 public class Order {
     private String email_owner;
     private String email_guest;

@@ -10,10 +10,13 @@ import com.github.nkzawa.emitter.Emitter;
 import com.github.nkzawa.socketio.client.IO;
 import com.github.nkzawa.socketio.client.Socket;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import org.json.JSONObject;
 
 import java.net.URISyntaxException;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 public class MainActivity extends AppCompatActivity {
     private Socket msocket;
@@ -38,10 +41,12 @@ public class MainActivity extends AppCompatActivity {
         order.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Offer offer = new Offer("anonymous", 10, "chauhoangphuc@gmail.com", 2);
+                Offer offer = new Offer("anonymous", 10, "chauhoangphuc@gmail.com", 2, 0,  Calendar.getInstance().getTime());
                 Order order = new Order("the.dreamers.k16@gmail.com", "chauhoangphuc@gmail.com", "Quán ăn chay", 4, 1, offer);
-                Gson gson = new Gson();
-                String req =  gson.toJson(order);
+                GsonBuilder builder = new GsonBuilder();
+                builder.registerTypeHierarchyAdapter(Serializer.class, new Serializer());
+                Gson gson = builder.create();
+                String req =  gson.toJson(order, Order.class);
                 System.out.printf(req);
                 Toast.makeText(MainActivity.this, req, Toast.LENGTH_LONG).show();
                 msocket.emit("send_order", req);
